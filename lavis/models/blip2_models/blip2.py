@@ -61,7 +61,10 @@ class MBBertSelfAttention(BertSelfAttention):
         is_cross_attention = encoder_hidden_states is not None
 
         if is_cross_attention:
+            # print('MBBertSelfAttention hidden states ', encoder_hidden_states.shape)
+            # print('MBBertSelfAttention key ', self.key(encoder_hidden_states).shape)
             key_layer = self.transpose_for_scores(self.key(encoder_hidden_states))
+            # print('MBBertSelfAttention key_layer states ', key_layer.shape)
             value_layer = self.transpose_for_scores(self.value(encoder_hidden_states))
             attention_mask = encoder_attention_mask
         elif past_key_value is not None:
@@ -89,7 +92,11 @@ class MBBertSelfAttention(BertSelfAttention):
         past_key_value = (key_layer, value_layer)
 
         # Take the dot product between "query" and "key" to get the raw attention scores.
+        # if is_cross_attention and self.save_attention:
+        #     print('query layer shape: ', query_layer.shape)
         attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
+        # if is_cross_attention and self.save_attention:
+        #     print('attention scores shape: ', attention_scores.shape)
 
         if (
             self.position_embedding_type == "relative_key"
@@ -141,7 +148,7 @@ class MBBertSelfAttention(BertSelfAttention):
 
         if is_cross_attention and self.save_attention:
             self.save_attention_map(attention_probs)
-            attention_probs.register_hook(self.save_attn_gradients)
+            # attention_probs.register_hook(self.save_attn_gradients)
 
         # This is actually dropping out entire tokens to attend to, which might
         # seem a bit unusual, but is taken from the original Transformer paper.

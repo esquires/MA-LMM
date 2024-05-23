@@ -153,6 +153,8 @@ class BertSelfAttention(nn.Module):
         return self.attn_gradients
 
     def save_attention_map(self, attention_map):
+        # print('saving attention')
+        # print(attention_map)
         self.attention_map = attention_map
 
     def get_attention_map(self):
@@ -183,15 +185,20 @@ class BertSelfAttention(nn.Module):
         is_cross_attention = encoder_hidden_states is not None
 
         if is_cross_attention:
+            # print('a')
+            # print('key shape: ', self.key(encoder_hidden_states).shape)
             key_layer = self.transpose_for_scores(self.key(encoder_hidden_states))
+            # print('key layer shape: ', key_layer.shape)
             value_layer = self.transpose_for_scores(self.value(encoder_hidden_states))
             attention_mask = encoder_attention_mask
         elif past_key_value is not None:
+            # print('b')
             key_layer = self.transpose_for_scores(self.key(hidden_states))
             value_layer = self.transpose_for_scores(self.value(hidden_states))
             key_layer = torch.cat([past_key_value[0], key_layer], dim=2)
             value_layer = torch.cat([past_key_value[1], value_layer], dim=2)
         else:
+            # print('c')
             key_layer = self.transpose_for_scores(self.key(hidden_states))
             value_layer = self.transpose_for_scores(self.value(hidden_states))
 
@@ -250,8 +257,9 @@ class BertSelfAttention(nn.Module):
         attention_probs = nn.Softmax(dim=-1)(attention_scores)
 
         if is_cross_attention and self.save_attention:
+            # print('saving attention')
             self.save_attention_map(attention_probs)
-            attention_probs.register_hook(self.save_attn_gradients)
+            # attention_probs.register_hook(self.save_attn_gradients)
 
         # This is actually dropping out entire tokens to attend to, which might
         # seem a bit unusual, but is taken from the original Transformer paper.
@@ -329,6 +337,11 @@ class BertAttention(nn.Module):
         past_key_value=None,
         output_attentions=False,
     ):
+        # try:
+        #     print('in BertAttention, encoder_hidden_states is ', encoder_hidden_states.shape)
+        #     print('self.self type: ', type(self.self))
+        # except:
+        #     pass
         self_outputs = self.self(
             hidden_states,
             attention_mask,
@@ -433,6 +446,8 @@ class BertLayer(nn.Module):
                 assert (
                     encoder_hidden_states is not None
                 ), "encoder_hidden_states must be given for cross-attention layers"
+                # print('a encoder hidden state shape in BerLayer, ', encoder_hidden_states.shape)
+                # print(type(self.crossattention))
                 cross_attention_outputs = self.crossattention(
                     query_attention_output,
                     attention_mask,
@@ -899,6 +914,7 @@ class BertModel(BertPreTrainedModel):
         # If a 2D or 3D attention mask is provided for the cross-attention
         # we need to make broadcastable to [batch_size, num_heads, seq_length, seq_length]
         if encoder_hidden_states is not None:
+            # print('encoder hidden states is ', encoder_hidden_states.shape)
             if type(encoder_hidden_states) == list:
                 encoder_batch_size, encoder_sequence_length, _ = encoder_hidden_states[
                     0

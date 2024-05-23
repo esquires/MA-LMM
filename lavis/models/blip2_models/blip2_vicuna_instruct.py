@@ -183,6 +183,7 @@ class Blip2VicunaInstruct_MALMM(Blip2Base):
                     else:
                         encoder_hidden_states = torch.cat([self.visual_memory_bank, image_embeds], dim=1) # [B, (t+1), N, C]
 
+                    print('encoder_hidden_states prior to reshaping ', encoder_hidden_states.shape)
                     query_output = self.Qformer.bert(
                         text_Qformer.input_ids,
                         attention_mask=Qformer_atts,
@@ -381,6 +382,8 @@ class Blip2VicunaInstruct_MALMM(Blip2Base):
                     image_embeds = image_embeds + image_pe  # [B, N, C]
                     image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(image.device)  # [B, N]
                     image_embeds = image_embeds.unsqueeze(1)  # [B, 1, N, C]
+                    self.size_N = image_embeds.shape[2]
+
 
                     if t == 0:
                         self.visual_memory_bank = image_embeds  # [B, 1, N, C]
@@ -390,6 +393,7 @@ class Blip2VicunaInstruct_MALMM(Blip2Base):
                         self.visual_memory_bank = torch.cat([self.visual_memory_bank, image_embeds], dim=1)  # [B, t+1, N, C]
                         self.compression_size = torch.cat([self.compression_size, self.size_constant], dim=1)  # [B, t+1, N]
 
+                    # print('encoder_hidden_states prior to reshaping ', self.visual_memory_bank.shape)
                     query_output = self.Qformer.bert(
                         text_Qformer.input_ids,
                         attention_mask=Qformer_atts,

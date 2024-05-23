@@ -22,7 +22,8 @@ model:
   num_query_token: 32
 
   # path to Vicuna checkpoint
-  llm_model: "llm/vicuna-7b"
+  llm_model: "/gv1/users/esquires3/repos/rl/llm/MA-LMM/llm/vicuna-7b"
+  # llm_model: "llm/vicuna-7b"
 
   # generation configs
   prompt: ""
